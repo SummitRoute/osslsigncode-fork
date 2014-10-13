@@ -1,0 +1,2 @@
+=== This is NOT the official repo for osslsigncode ===  
+This project was copied from osslsigncode 1.7.1 to apply some patches for compiling with cygwin and being able to add unauthenticated blobs.  The official source for the project is at: http://sourceforge.net/projects/osslsigncode/
