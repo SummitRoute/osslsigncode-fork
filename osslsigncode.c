@@ -59,12 +59,14 @@ static const char *rcsid = "$Id: osslsigncode.c,v 1.7.1 2014/07/11 14:14:14 mfiv
    * tail -c, tcpdump, mimencode & openssl asn1parse :)
 
 */
+typedef int SOCKET;
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
 
 #ifdef HAVE_WINDOWS_H
+#define NOCRYPT
 #include <windows.h>
 #endif
 
@@ -458,6 +460,39 @@ static void tohex(const unsigned char *v, unsigned char *b, int len)
 		sprintf((char*)b+i*2, "%02X", v[i]);
 	b[i*2] = 0x00;
 }
+
+static int add_unauthenticated_blob(PKCS7 *sig)
+{
+	u_char *p = NULL;
+	int len = 1024+4;
+	char prefix[] = "\x0c\x82\x04\x00---BEGIN_BLOB---";  // Length data for ASN1 attribute plus prefix
+	char postfix[] = "---END_BLOB---";
+	
+	PKCS7_SIGNER_INFO *si =
+		sk_PKCS7_SIGNER_INFO_value
+		(sig->d.sign->signer_info, 0);
+
+	ASN1_STRING *astr;
+
+	p = OPENSSL_malloc(len);
+	memset(p, 0, len);
+	memcpy(p, prefix, sizeof(prefix));
+	memcpy(p+len-sizeof(postfix), postfix, sizeof(postfix));
+
+	astr = ASN1_STRING_new();
+	ASN1_STRING_set(astr, p, len);
+
+	int nid = OBJ_create("1.3.6.1.4.1.42921.1.2.1",
+                   "unauthenticatedData",
+                   "unauthenticatedData");
+
+	PKCS7_add_attribute (si, nid, V_ASN1_SEQUENCE, astr);
+
+	OPENSSL_free(p);
+
+	return 0;
+}
+
 
 #ifdef ENABLE_CURL
 
@@ -2191,13 +2226,8 @@ static STACK_OF(X509) *PEM_read_certs(BIO *bin, char *certpass)
 
 static off_t get_file_size(const char *infile)
 {
-#ifdef WIN32
-	struct _stat st;
-	if (_stat(infile, &st))
-#else
 	struct stat st;
 	if (stat(infile, &st))
-#endif
 	{
 		fprintf(stderr, "Failed to open file: %s\n", infile);
 		return 0;
@@ -2215,7 +2245,7 @@ static char* map_file(const char *infile, const off_t size)
 	char *indata = NULL;
 #ifdef WIN32
 	HANDLE fh, fm;
-	fh = CreateFile(infile, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+	fh = CreateFile(infile, GENERIC_READ, FILE_SHARE_READ , NULL, OPEN_EXISTING, 0, NULL);
 	if (fh == INVALID_HANDLE_VALUE)
 		return NULL;
 	fm = CreateFileMapping(fh, NULL, PAGE_READONLY, 0, 0, NULL);
@@ -2296,6 +2326,7 @@ int main(int argc, char **argv)
 	int nest = 0;
 	int add_msi_dse = 0;
 	int nturl = 0, ntsurl = 0;
+	int addBlob = 0;
 	u_char *p = NULL;
 	int ret = 0, i, len = 0, jp = -1, pe32plus = 0, comm = 0, pagehash = 0;
 	unsigned int tmp, peheader = 0, padlen = 0;
@@ -2431,6 +2462,8 @@ int main(int argc, char **argv)
 			if (--argc < 1) usage(argv0);
 			proxy = *(++argv);
 #endif
+		} else if ((cmd == CMD_SIGN) && !strcmp(*argv, "-addBlob")) {
+			addBlob = 1;
 		} else if ((cmd == CMD_SIGN) && !strcmp(*argv, "-nest")) {
 			nest = 1;
 		} else if ((cmd == CMD_SIGN) && !strcmp(*argv, "-add-msi-dse")) {
@@ -3033,6 +3066,10 @@ int main(int argc, char **argv)
 	if (ntsurl && add_timestamp_rfc3161(sig, tsurl, ntsurl, proxy, md))
 		DO_EXIT_0("RFC 3161 timestamping failed\n");
 #endif
+
+	if (addBlob && add_unauthenticated_blob(sig))
+		DO_EXIT_0("Adding unauthenticated blob failed\n");
+
 
 #if 0
 	if (!PEM_write_PKCS7(stdout, sig))
