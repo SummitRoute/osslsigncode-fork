@@ -846,6 +846,7 @@ typedef enum {
 	CMD_EXTRACT,
 	CMD_REMOVE,
 	CMD_VERIFY,
+	CMD_ADD,
 } cmd_type_t;
 
 
@@ -2389,6 +2390,10 @@ int main(int argc, char **argv)
 			cmd = CMD_VERIFY;
 			argv++;
 			argc--;
+		} else if (!strcmp(argv[1], "add")) {
+			cmd = CMD_ADD;
+			argv++;
+			argc--;
 		}
 	}
 
@@ -2462,7 +2467,7 @@ int main(int argc, char **argv)
 			if (--argc < 1) usage(argv0);
 			proxy = *(++argv);
 #endif
-		} else if ((cmd == CMD_SIGN) && !strcmp(*argv, "-addBlob")) {
+		} else if ((cmd == CMD_SIGN || cmd == CMD_ADD) && !strcmp(*argv, "-addBlob")) {
 			addBlob = 1;
 		} else if ((cmd == CMD_SIGN) && !strcmp(*argv, "-nest")) {
 			nest = 1;
@@ -2688,8 +2693,8 @@ int main(int argc, char **argv)
 		} else if (cmd == CMD_VERIFY) {
 			ret = msi_verify_file(ole, leafhash);
 			goto skip_signing;
-		} else if (cmd == CMD_SIGN) {
-			if (nest) {
+		} else if (cmd == CMD_SIGN || cmd == CMD_ADD) {
+				if (nest || cmd == CMD_ADD) {
 				// Perform a sanity check for the MsiDigitalSignatureEx section.
 				// If the file we're attempting to sign has an MsiDigitalSignatureEx
 				// section, we can't add a nested signature of a different MD type
@@ -2713,6 +2718,9 @@ int main(int argc, char **argv)
 				cursig = msi_extract_signature_to_pkcs7(ole);
 				if (cursig == NULL) {
 					DO_EXIT_0("Unable to extract existing signature in -nest mode");
+				}
+				if (cmd == CMD_ADD) {
+					sig = cursig;
 				}
 			}
 		}
@@ -2882,10 +2890,13 @@ int main(int argc, char **argv)
 			goto skip_signing;
 		}
 
-		if (cmd == CMD_SIGN && nest) {
+		if ((cmd == CMD_SIGN && nest) || cmd == CMD_ADD) {
 			cursig = extract_existing_pe_pkcs7(indata, peheader, pe32plus, sigpos ? sigpos : fileend, siglen);
 			if (cursig == NULL) {
 				DO_EXIT_0("Unable to extract existing signature in -nest mode");
+			}
+			if (cmd == CMD_ADD) {
+				sig = cursig;
 			}
 		}
 
@@ -2920,6 +2931,9 @@ int main(int argc, char **argv)
 			fileend += len;
 		}
 	}
+
+	if (cmd == CMD_ADD)
+		goto add_only;
 
 	if (cmd != CMD_SIGN)
 		goto skip_signing;
@@ -3059,6 +3073,8 @@ int main(int argc, char **argv)
 	ASN1_STRING_set(td7->d.other->value.sequence, buf, len+mdlen);
 	PKCS7_set_content(sig, td7);
 
+add_only:
+
 #ifdef ENABLE_CURL
 	/* add counter-signature/timestamp */
 	if (nturl && add_timestamp_authenticode(sig, turl, nturl, proxy))
@@ -3113,7 +3129,7 @@ int main(int argc, char **argv)
 #ifdef WITH_GSF
 	} else if (type == FILE_TYPE_MSI) {
 		/* Only output signatures if we're signing. */
-		if (cmd == CMD_SIGN) {
+		if (cmd == CMD_SIGN || cmd == CMD_ADD) {
 			GsfOutput *child = gsf_outfile_new_child(outole, "\05DigitalSignature", FALSE);
 			if (!gsf_output_write(child, len, p))
 				DO_EXIT_1("Failed to write MSI 'DigitalSignature' signature to %s", infile);
@@ -3139,7 +3155,7 @@ int main(int argc, char **argv)
 skip_signing:
 
 	if (type == FILE_TYPE_PE) {
-		if (cmd == CMD_SIGN) {
+		if (cmd == CMD_SIGN || cmd == CMD_ADD) {
 			/* Update signature position and size */
 			(void)BIO_seek(outdata, peheader+152+pe32plus*16);
 			PUT_UINT32_LE(fileend, buf); /* Previous file end = signature table start */
@@ -3147,7 +3163,7 @@ skip_signing:
 			PUT_UINT32_LE(len+8+padlen, buf);
 			BIO_write(outdata, buf, 4);
 		}
-		if (cmd == CMD_SIGN || cmd == CMD_REMOVE)
+		if (cmd == CMD_SIGN || cmd == CMD_REMOVE || cmd == CMD_ADD)
 			recalc_pe_checksum(outdata, peheader);
 	} else if (type == FILE_TYPE_CAB) {
 		(void)BIO_seek(outdata, 0x30);
