@@ -12,3 +12,8 @@ You will see a message "WARNING This is NOT the official osslsigncode project." 
 
 ## Features added
 Adds the argument "-addBlob" to add a 1024 byte unauthenticated blob of data to the signature in the same area as the timestamp.  You can take a code signed file and run "osslsigncode.exe add -addBlob -in myfile.exe -out myoutfile.exe"
+
+This technique is used by Dropbox as discussed here:
+
+- https://tech.dropbox.com/2014/08/tech-behind-dropboxs-new-user-experience-for-mobile/
+- http://blogs.msdn.com/b/ieinternals/archive/2014/09/04/personalizing-installers-using-unauthenticated-data-inside-authenticode-signed-binaries.aspx
