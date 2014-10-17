@@ -22,7 +22,10 @@ osslsigncode.exe add -addUnauthenticatedBlob -in your_signed_file.exe -out out.e
 
 ```
 # Example 4. Sign, timestamp, and add blob
-# Technically you can do this, but this would mean your signing certificate is on a computer that is connected the Internet, which means you are doing something wrong, so I'm not going to show how to do that.
+# Technically you can do this, but this would mean your signing certificate 
+# is on a computer that is connected the Internet, 
+# which means you are doing something wrong, 
+# so I'm not going to show how to do that.
 
 ```
 
@@ -49,5 +52,6 @@ make
 ```
 
 ## Download
-The compiled cygwin binary can be downloaded from: https://summitroute.com/downloads/osslsigncode.exe
-To get the compiled binary plus all the required DLL's, download the self-extracting exe at: https://summitroute.com/downloads/osslsigncode-cygwin_files.exe
+
+- Compiled binary for cygwin: https://summitroute.com/downloads/osslsigncode.exe
+- Compiled binary plus all the required DLL's (self-extracting exe): https://summitroute.com/downloads/osslsigncode-cygwin_files.exe
