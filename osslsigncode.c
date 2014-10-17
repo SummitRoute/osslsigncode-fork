@@ -800,7 +800,7 @@ static void usage(const char *argv0)
 			"\t\t[ -t <timestampurl> [ -t ... ] [ -p <proxy> ]]\n"
 			"\t\t[ -ts <timestampurl> [ -ts ... ] [ -p <proxy> ]]\n"
 #endif
-			"\t\t[ -addBlob ]\n\n"
+			"\t\t[ -addUnauthenticatedBlob ]\n\n"
 			"\t\t[ -nest ]\n\n"
 			"\t\tMSI specific:\n"
 			"\t\t[ -add-msi-dse ]\n\n"
@@ -809,7 +809,7 @@ static void usage(const char *argv0)
 			"\tremove-signature [ -in ] <infile> [ -out ] <outfile>\n\n"
 			"\tverify [ -in ] <infile>\n"
 			"\t\t[ -require-leaf-hash {md5,sha1,sha2(56),sha384,sha512}:XXXXXXXXXXXX... ]\n\n"
-			"\tadd [-addBlob] [ -in ] <infile> [ -out ] <outfile>\n"
+			"\tadd [-addUnauthenticatedBlob] [ -in ] <infile> [ -out ] <outfile>\n"
 #ifdef ENABLE_CURL
 			"\t\t[ -t <timestampurl> [ -t ... ] [ -p <proxy> ]]\n"
 			"\t\t[ -ts <timestampurl> [ -ts ... ] [ -p <proxy> ]]\n"
@@ -2475,7 +2475,7 @@ int main(int argc, char **argv)
 			if (--argc < 1) usage(argv0);
 			proxy = *(++argv);
 #endif
-		} else if ((cmd == CMD_SIGN || cmd == CMD_ADD) && !strcmp(*argv, "-addBlob")) {
+		} else if ((cmd == CMD_SIGN || cmd == CMD_ADD) && !strcmp(*argv, "-addUnauthenticatedBlob")) {
 			addBlob = 1;
 		} else if ((cmd == CMD_SIGN) && !strcmp(*argv, "-nest")) {
 			nest = 1;
