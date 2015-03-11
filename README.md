@@ -1,5 +1,9 @@
+**Update 2015.03.11: Official repo now contains the changes for adding the unauthenticated blob (no official binaries yet available, as the most current official binaries are 1.7.1 from 2014.07.11 which does not contain these changes): http://sourceforge.net/p/osslsigncode/osslsigncode/ci/master/tree/**
+
 # This is NOT the official repo for osslsigncode  
 This project was copied from osslsigncode 1.7.1 to apply some patches for compiling with cygwin and being able to add unauthenticated blobs.  The official source for the project is at: http://sourceforge.net/projects/osslsigncode/
+
+See blog post for why these changes were made at: https://summitroute.com/blog/2014/10/20/modifying_code_signed_files/
 
 ## Features added
 Adds the argument "-addUnauthenticatedBlob" to add a 1024 byte unauthenticated blob of data to the signature in the same area as the timestamp.  This can be used while signing, while timestamping (new `add` command added to allow just time-stamping, after a file has been code signed, or by itself.
