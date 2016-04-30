@@ -1,0 +1,8 @@
+osslsigncode (1.7.1) debian; urgency=low
+
+  - MSI: added -add-msi-dse option
+      (Patch from Mikkel Krautz)
+  - MSI: fix build when GSF_CAN_READ_MSI_METADATA defined
+      (Patch from Mikkel Krautz)
+
+ -- Artem V. Navrotskiy <bozaro@yandex.ru>  Fri, 29 Apr 2016 22:37:14 +0400

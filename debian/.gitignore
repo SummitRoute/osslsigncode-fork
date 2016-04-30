@@ -1,0 +1,6 @@
+debhelper-build-stamp
+files
+osslsigncode.debhelper.log
+osslsigncode.substvars
+osslsigncode/
+

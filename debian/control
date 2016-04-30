@@ -1,0 +1,14 @@
+Source: osslsigncode
+Section: devel
+Priority: optional
+Maintainer: Artem V. Navrotskiy <bozaro@yandex.ru>
+Build-Depends: debhelper (>= 9), libgsf-1-dev, libcurl4-openssl-dev
+Standards-Version: 3.9.6
+Homepage: https://github.com/SummitRoute/osslsigncode-fork
+Vcs-Git: https://github.com/SummitRoute/osslsigncode-fork.git
+
+Package: osslsigncode
+Depends: libgsf-1, libcurl4-openssl
+Architecture: any
+Description: osslsigncode is a small tool that implements part of
+ the functionality of the Microsoft tool signtool.exe.
